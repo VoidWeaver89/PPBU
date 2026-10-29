@@ -18,30 +18,41 @@ def update_base_label(event):
     name = currencies[code]
     base_label.config(text=name)
 
-    # ФУНКЦИЯ ДЛЯ ВТОРОЙ ВАЛЮТЫ
+# ФУНКЦИЯ ДЛЯ ВТОРОЙ ВАЛЮТЫ
 def update_base2_label(event):
     code = base2_combobox.get()
     name = currencies[code]
     base2_label.config(text=name)
 
 
+# ФУНКЦИЯ ОБМЕНА ДЛЯ ДВУХ ЗАПРОСОВ
 def exchange():
     target_code = target_combobox.get().strip()
     base_code = base_combobox.get().strip()
+    base2_code = base2_combobox.get().strip()
 
     if target_code and base_code:
         try:
+            # Запрос для первой базовой валюты
+            response1 = requests.get(f'https://open.er-api.com/v6/latest/{base_code}')
+            response1.raise_for_status()
+            data1 = response1.json()
 
-            response = requests.get(f'https://open.er-api.com/v6/latest/{base_code}')
-            response.raise_for_status()
-            data = response.json()
-            if target_code in data['rates']:
-                exchange_rate = data['rates'][target_code]
+            # Запрос для второй базовой валюты
+            response2 = requests.get(f'https://open.er-api.com/v6/latest/{base2_code}')
+            response2.raise_for_status()
+            data2 = response2.json()
+
+            if target_code in data1['rates']:
+                exchange_rate1 = data1['rates'][target_code]
+                exchange_rate2 = data2['rates'][target_code]
                 base = currencies[base_code]
+                base2 = currencies[base2_code]
                 target = currencies[target_code]
-                # currency_name = currencies[code]
-                mb.showinfo('Курс обмена',
-                            f'Курс: {exchange_rate:.1f} {target} за 1 {base}')
+                # Текст ответа для двух валют сразу
+                mb.showinfo('Курсы обмена',
+                    f'Курс 1: {exchange_rate1:.1f} {target} за 1 {base}\n'
+                            f'Курс 2: {exchange_rate2:.1f} {target} за 1 {base2}')
             else:
                 mb.showerror('Ошибка',
                             f'Валюта {target_code} не найдена')
@@ -49,7 +60,7 @@ def exchange():
             mb.showerror('Ошибка', er)
 
     else:
-        mb.showwarning('Внимание', 'Введите код валюты')
+        mb.showwarning('Внимание', 'Выберите все три валюты')
 
 
 currencies = {
@@ -68,10 +79,11 @@ currencies = {
 }
 
 root = Tk()
-root.title('Курс обмена валют USD')
+root.title('Курс обмена валют')
 root.geometry('360x300')
 
-Label(root, text='Базовая валюта').pack()
+# Первая базовая валюта
+Label(root, text='Первая базовая валюта').pack()
 base_combobox = ttk.Combobox(root, values=list(currencies.keys()))
 base_combobox.pack(pady=3, padx=10)
 base_combobox.bind('<<ComboboxSelected>>', update_base_label)
@@ -86,6 +98,7 @@ base2_combobox.bind('<<ComboboxSelected>>', update_base2_label)
 base2_label = ttk.Label()
 base2_label.pack()
 
+# Целевая валюта
 Label(root, text='Целевая валюта' ).pack(padx=10)
 target_combobox = ttk.Combobox(root, values=list(currencies.keys()))
 target_combobox.pack(pady=3, padx=10)
@@ -94,7 +107,7 @@ target_label = ttk.Label()
 target_label.pack()
 
 
-Button(text='Получить курс обмена к доллару',
+Button(text='Получить курсы обмена',
        command=exchange).pack(pady=10, padx=10)
 
 
