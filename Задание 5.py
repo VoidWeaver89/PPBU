@@ -2,9 +2,7 @@ from tkinter import *
 from tkinter import messagebox as mb
 from tkinter import ttk
 import requests
-import json
-import pprint
-from bottle import response
+
 
 
 def update_currency_label(event):
@@ -31,7 +29,7 @@ def exchange():
     base_code = base_combobox.get().strip()
     base2_code = base2_combobox.get().strip()
 
-    if target_code and base_code:
+    if target_code and base_code and base2_code:
         try:
             # Запрос для первой базовой валюты
             response1 = requests.get(f'https://open.er-api.com/v6/latest/{base_code}')
@@ -43,7 +41,7 @@ def exchange():
             response2.raise_for_status()
             data2 = response2.json()
 
-            if target_code in data1['rates']:
+            if target_code in data1['rates'] and target_code in data2['rates']:
                 exchange_rate1 = data1['rates'][target_code]
                 exchange_rate2 = data2['rates'][target_code]
                 base = currencies[base_code]
@@ -51,8 +49,8 @@ def exchange():
                 target = currencies[target_code]
                 # Текст ответа для двух валют сразу
                 mb.showinfo('Курсы обмена',
-                    f'Курс 1: {exchange_rate1:.1f} {target} за 1 {base}\n'
-                            f'Курс 2: {exchange_rate2:.1f} {target} за 1 {base2}')
+                    f'Курс 1: {exchange_rate1:.2f} {target} за 1 {base}\n'
+                            f'Курс 2: {exchange_rate2:.2f} {target} за 1 {base2}')
             else:
                 mb.showerror('Ошибка',
                             f'Валюта {target_code} не найдена')
@@ -84,7 +82,7 @@ root.geometry('360x300')
 
 # Первая базовая валюта
 Label(root, text='Первая базовая валюта').pack()
-base_combobox = ttk.Combobox(root, values=list(currencies.keys()))
+base_combobox = ttk.Combobox(root, values=list(currencies.keys()), state="readonly")
 base_combobox.pack(pady=3, padx=10)
 base_combobox.bind('<<ComboboxSelected>>', update_base_label)
 base_label = ttk.Label()
@@ -92,7 +90,7 @@ base_label.pack()
 
 # Вторая базовая валюта
 Label(root, text='Вторая базовая валюта').pack()
-base2_combobox = ttk.Combobox(root, values=list(currencies.keys()))
+base2_combobox = ttk.Combobox(root, values=list(currencies.keys()), state="readonly")
 base2_combobox.pack(pady=3, padx=10)
 base2_combobox.bind('<<ComboboxSelected>>', update_base2_label)
 base2_label = ttk.Label()
@@ -100,7 +98,7 @@ base2_label.pack()
 
 # Целевая валюта
 Label(root, text='Целевая валюта' ).pack(padx=10)
-target_combobox = ttk.Combobox(root, values=list(currencies.keys()))
+target_combobox = ttk.Combobox(root, values=list(currencies.keys()), state="readonly")
 target_combobox.pack(pady=3, padx=10)
 target_combobox.bind('<<ComboboxSelected>>', update_currency_label)
 target_label = ttk.Label()
