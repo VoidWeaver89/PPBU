@@ -1,6 +1,19 @@
 from tkinter import *
 from tkinter import ttk
 
+
+def update_base_label(event):
+    code = base_combobox.get()
+    name = cryptos[code]
+    base_label.config(text=name)
+
+
+def update_currency_label(event):
+    code = target_combobox.get()
+    name = currencies[code]
+    target_label.config(text=name)
+
+
 # Популярные криптовалюты: ключ — тикер для Binance, значение — название
 cryptos = {
     'BTC': 'Bitcoin (BTC)',
@@ -34,11 +47,17 @@ root.geometry('420x250')
 Label(root, text='Базовая валюта (криптовалюта)').pack(pady=(10, 0))
 base_combobox = ttk.Combobox(root, values=list(cryptos.keys()), state="readonly")
 base_combobox.pack(pady=3, padx=10)
+base_combobox.bind('<<ComboboxSelected>>', update_base_label)
+base_label = ttk.Label(foreground='gray')
+base_label.pack()
 
 # Целевая валюта (валюта расчета)
 Label(root, text='Целевая валюта').pack(pady=(10, 0), padx=10)
 target_combobox = ttk.Combobox(root, values=list(currencies.keys()), state="readonly")
 target_combobox.pack(pady=3, padx=10)
+target_combobox.bind('<<ComboboxSelected>>', update_currency_label)
+target_label = ttk.Label(foreground='gray')
+target_label.pack()
 
 Button(text='Получить курс обмена').pack(pady=15, padx=10)
 
