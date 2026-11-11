@@ -1,5 +1,7 @@
 from tkinter import *
+from tkinter import messagebox as mb
 from tkinter import ttk
+import requests
 
 
 def update_base_label(event):
@@ -12,6 +14,18 @@ def update_currency_label(event):
     code = target_combobox.get()
     name = currencies[code]
     target_label.config(text=name)
+
+
+def exchange():
+    base_code = base_combobox.get().strip()
+
+    # Запрос к Binance — цена выбранной криптовалюты в долларах (USDT)
+    crypto_response = requests.get(f'https://api.binance.com/api/v3/ticker/price?symbol={base_code}USDT')
+    crypto_data = crypto_response.json()
+    price_in_usd = float(crypto_data['price'])
+
+    base = cryptos[base_code]
+    mb.showinfo('Курс обмена', f'Курс: {price_in_usd:.4f} USD за 1 {base}')
 
 
 # Популярные криптовалюты: ключ — тикер для Binance, значение — название
@@ -59,6 +73,6 @@ target_combobox.bind('<<ComboboxSelected>>', update_currency_label)
 target_label = ttk.Label(foreground='gray')
 target_label.pack()
 
-Button(text='Получить курс обмена').pack(pady=15, padx=10)
+Button(text='Получить курс обмена', command=exchange).pack(pady=15, padx=10)
 
 root.mainloop()
