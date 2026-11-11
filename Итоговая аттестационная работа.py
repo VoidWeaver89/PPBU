@@ -20,25 +20,42 @@ def exchange():
     base_code = base_combobox.get().strip()
     target_code = target_combobox.get().strip()
 
-    # Запрос к Binance — цена выбранной криптовалюты в долларах (USDT)
-    crypto_response = requests.get(f'https://api.binance.com/api/v3/ticker/price?symbol={base_code}USDT')
-    crypto_data = crypto_response.json()
-    price_in_usd = float(crypto_data['price'])
+    if target_code and base_code:
+        try:
+            # Запрос к Binance — цена выбранной криптовалюты в долларах (USDT)
+            crypto_response = requests.get(f'https://api.binance.com/api/v3/ticker/price?symbol={base_code}USDT')
+            crypto_response.raise_for_status()
+            crypto_data = crypto_response.json()
 
-    # Запрос курса доллара США к выбранной целевой валюте
-    fiat_response = requests.get('https://open.er-api.com/v6/latest/USD')
-    fiat_data = fiat_response.json()
-    usd_to_target = fiat_data['rates'][target_code]
+            if 'price' in crypto_data:
+                price_in_usd = float(crypto_data['price'])
 
-    # Перемножаем цену в долларах на курс доллара к целевой валюте
-    exchange_rate = price_in_usd * usd_to_target
+                # Запрос курса доллара США к выбранной целевой валюте
+                fiat_response = requests.get('https://open.er-api.com/v6/latest/USD')
+                fiat_response.raise_for_status()
+                fiat_data = fiat_response.json()
 
-    base = cryptos[base_code]
-    target = currencies[target_code]
+                if target_code in fiat_data['rates']:
+                    usd_to_target = fiat_data['rates'][target_code]
 
-    # Вывод итогового результата
-    mb.showinfo('Курс обмена',
-                f'Курс: {exchange_rate:.4f} {target} ({target_code}) за 1 {base}')
+                    # Перемножаем цену в долларах на курс доллара к целевой валюте
+                    exchange_rate = price_in_usd * usd_to_target
+
+                    base = cryptos[base_code]
+                    target = currencies[target_code]
+
+                    # Вывод итогового результата
+                    mb.showinfo('Курс обмена',
+                                f'Курс: {exchange_rate:.4f} {target} ({target_code}) за 1 {base}')
+                else:
+                    mb.showerror('Ошибка', f'Валюта {target_code} не найдена')
+            else:
+                mb.showerror('Ошибка', f'Криптовалюта {base_code} не найдена')
+        except Exception as er:
+            mb.showerror('Ошибка', er)
+
+    else:
+        mb.showwarning('Внимание', 'Выберите криптовалюту и валюту расчета')
 
 
 # Популярные криптовалюты: ключ — тикер для Binance, значение — название
